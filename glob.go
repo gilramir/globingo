@@ -30,7 +30,8 @@ type Glob struct {
 }
 
 // Return a new Glob object. The pattern is the glob pattern to use.
-// The style indicates which type of directory separator characters to expect.
+// The style indicates which type of directory separator characters to expect:
+// NativeStyle, WindowsStyle, or UnixStyle.
 // When recursive is true, '**' is allowed as a wildcard which matches any directory
 // or filename, to any depth. When false, '**' is not allowed in a glob pattern.
 // An error is returned when the glob pattern contains a syntax error.

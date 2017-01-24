@@ -16,14 +16,16 @@ type Match struct {
 	// Copied from the parent glob object
 	wildcardPositions []int
 
-	// Last position (used with StartsWWith)
+	// Last position (used with StartsWith)
 	lastPosition int
 }
 
+// Returns the last position that was matched.
 func (self *Match) LastPosition() int {
 	return self.lastPosition
 }
 
+// Return the string that the Nth wildcard matched.
 func (self *Match) GetWildcardText(n int) (string, error) {
 	if n == 0 {
 		return "", errors.New("Glob Match wildcard positions start at 1")
