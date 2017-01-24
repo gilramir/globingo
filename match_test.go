@@ -115,3 +115,76 @@ func (s *MySuite) TestMatchMultiChar(c *C) {
 	c.Assert(match, IsNil)
 }
 
+func (s *MySuite) TestReplaceNoWildcard(c *C) {
+	glob, err := New("foo", UnixStyle, false)
+	c.Assert(err, IsNil)
+
+	match := glob.Match("foo")
+	c.Assert(match, NotNil)
+
+	newString, err := match.Replace("nothing")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "nothing")
+
+	newString, err = match.Replace("oops\\0")
+	c.Assert(err, NotNil)
+	c.Check(err.Error(), Equals, "Glob Match wildcard positions start at 1")
+
+	newString, err = match.Replace("oops\\1")
+	c.Assert(err, NotNil)
+	c.Check(err.Error(), Equals, "This Glob Match has 0 wildcards; #1 was requested")
+
+	newString, err = match.Replace("oops\\")
+	c.Assert(err, NotNil)
+	c.Check(err.Error(), Equals, "\\ should be followed by number or \\ at the end of the string")
+}
+
+func (s *MySuite) TestReplace(c *C) {
+	glob, err := New("foo-?/*", UnixStyle, false)
+	c.Assert(err, IsNil)
+
+	match := glob.Match("foo-a/bar")
+	c.Assert(match, NotNil)
+
+	newString, err := match.Replace("\\2/\\1")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "bar/a")
+
+	newString, err = match.Replace("\\1\\2\\1")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "abara")
+
+}
+
+func (s *MySuite) TestReplaceMoreThan9(c *C) {
+	glob, err := New("????????????", UnixStyle, false)
+	c.Assert(err, IsNil)
+
+	match := glob.Match("ABCDEFGHIJKL")
+	c.Assert(match, NotNil)
+
+	var newString string
+	newString, err = match.Replace("\\1")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "A")
+
+	newString, err = match.Replace("\\2")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "B")
+
+	newString, err = match.Replace("\\3")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "C")
+
+	newString, err = match.Replace("\\10")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "J")
+
+	newString, err = match.Replace("\\11")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "K")
+
+	newString, err = match.Replace("\\12")
+	c.Assert(err, IsNil)
+	c.Check(newString, Equals, "L")
+}
