@@ -1,0 +1,5 @@
+package globingo
+
+const (
+	kNativeDirectorySeparator = '\\'
+)

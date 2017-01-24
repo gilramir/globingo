@@ -79,6 +79,8 @@ func (self *Glob) match(haystack string, matchCompleteString bool) *Match {
 	var directorySeparator rune
 
 	switch self.style {
+        case NativeStyle:
+                directorySeparator = kNativeDirectorySeparator
 	case UnixStyle:
 		directorySeparator = '/'
 	case WindowsStyle:
