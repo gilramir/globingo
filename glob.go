@@ -1,4 +1,5 @@
-// A glob module that all
+// A glob module that also provides access to which strings matched
+// each wildcard.
 package globingo
 
 import (
