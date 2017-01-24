@@ -20,15 +20,15 @@ Not yet implemented:
         If ** is followed by a separator character, only directories and subdirectories match.
         If recursive is not set, this is an illegal character combination.
 
+API docs at: [godoc.org](https://godoc.org/github.com/gilramir/globingo "GoDoc")
 
 To use:
 
 1. Create a new Glob object with the glob string:
-
 ```
 import "github.com/gilramir/globingo"
 
-glob, err := globingo.New("*.tar.gz", UnixStyle, false)
+glob, err := globingo.New("*.tar.gz", NativeStyle, false)
 ```
 2. Use that Glob object to match a pattern, either with Match(), which matches the entire pattern,
 or StartsWith(), which checks if the pattern starts with the glob.
