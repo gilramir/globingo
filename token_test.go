@@ -1,6 +1,7 @@
 package globingo
 
 import (
+	"context"
 	. "gopkg.in/check.v1"
 )
 
@@ -146,4 +147,84 @@ func (s *MySuite) TestTokenRangeInverted(c *C) {
 	// empty string
 	m, t = token.Matches("", 0, '/')
 	c.Check(m, Equals, false)
+}
+
+func (s *MySuite) TestTokenSingleDirAllMatchedPatterns1(c *C) {
+	// We pretend the glob is *.c
+	token := &tokenMultiCharSingleDirectory{}
+
+	haystack := "foo.c"
+
+	ctx, _ := context.WithCancel(context.Background())
+	var patterns []string
+	for pattern := range token.AllMatchedPatterns(ctx, haystack, 0, '/') {
+		patterns = append(patterns, pattern)
+	}
+
+	c.Assert(len(patterns), Equals, 5)
+	c.Check(patterns[0], Equals, "f")
+	c.Check(patterns[1], Equals, "fo")
+	c.Check(patterns[2], Equals, "foo")
+	c.Check(patterns[3], Equals, "foo.")
+	c.Check(patterns[4], Equals, "foo.c")
+}
+
+func (s *MySuite) TestTokenSingleDirAllMatchedPatterns2(c *C) {
+	// We pretend the glob is */foo.c
+	token := &tokenMultiCharSingleDirectory{}
+
+	haystack := "bar/foo.c"
+
+	ctx, _ := context.WithCancel(context.Background())
+	var patterns []string
+	for pattern := range token.AllMatchedPatterns(ctx, haystack, 0, '/') {
+		patterns = append(patterns, pattern)
+	}
+
+	c.Assert(len(patterns), Equals, 3)
+	c.Check(patterns[0], Equals, "b")
+	c.Check(patterns[1], Equals, "ba")
+	c.Check(patterns[2], Equals, "bar")
+}
+
+func (s *MySuite) TestTokenMultiDirAllMatchedPatterns1(c *C) {
+	// We pretend the glob is a/**/foo.c
+	token := &tokenMultiCharMultiDirectory{
+		directoriesOnly: true,
+	}
+
+	haystack := "a/bb/ccc/ddd/eee/foo.c"
+
+	ctx, _ := context.WithCancel(context.Background())
+	var patterns []string
+	for pattern := range token.AllMatchedPatterns(ctx, haystack, 2, '/') {
+		patterns = append(patterns, pattern)
+	}
+
+	c.Assert(len(patterns), Equals, 4)
+	c.Check(patterns[0], Equals, "bb")
+	c.Check(patterns[1], Equals, "bb/ccc")
+	c.Check(patterns[2], Equals, "bb/ccc/ddd")
+	c.Check(patterns[3], Equals, "bb/ccc/ddd/eee")
+}
+
+func (s *MySuite) TestTokenMultiDirAllMatchedPatterns2(c *C) {
+	// We pretend the glob is a/**/foo.c
+	token := &tokenMultiCharMultiDirectory{
+		directoriesOnly: true,
+	}
+
+	haystack := "a/bb/ccc/ddd/eee/"
+
+	ctx, _ := context.WithCancel(context.Background())
+	var patterns []string
+	for pattern := range token.AllMatchedPatterns(ctx, haystack, 2, '/') {
+		patterns = append(patterns, pattern)
+	}
+
+	c.Assert(len(patterns), Equals, 4)
+	c.Check(patterns[0], Equals, "bb")
+	c.Check(patterns[1], Equals, "bb/ccc")
+	c.Check(patterns[2], Equals, "bb/ccc/ddd")
+	c.Check(patterns[3], Equals, "bb/ccc/ddd/eee")
 }

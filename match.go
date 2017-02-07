@@ -20,8 +20,8 @@ type Match struct {
 	lastPosition int
 }
 
-// Returns the last position that was matched.
-func (self *Match) LastPosition() int {
+// Returns the length of the string that was matched
+func (self *Match) Length() int {
 	return self.lastPosition
 }
 

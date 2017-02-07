@@ -11,12 +11,13 @@ import (
 // https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 
 type lexerState struct {
-	input  string // the string being scanned
-	start  int    // the start position of this token
-	pos    int    // current position within the input
-	width  int    // width of the last rune read (ASCII/UTF)
-	tokens []tokenInterface
-	err    error
+	directorySeparator rune
+	input              string // the string being scanned
+	start              int    // the start position of this token
+	pos                int    // current position within the input
+	width              int    // width of the last rune read (ASCII/UTF)
+	tokens             []tokenInterface
+	err                error
 }
 
 // returns the next rune in the input
@@ -74,11 +75,12 @@ type stateFunc func(*lexerState) stateFunc
 
 const eof = -1
 
-func tokenizePattern(pattern string, style PathStyle) ([]tokenInterface, error) {
+func tokenizePattern(pattern string, directorySeparator rune) ([]tokenInterface, error) {
 
-	var lexer lexerState
-
-	lexer.input = pattern
+	var lexer = lexerState{
+		input:              pattern,
+		directorySeparator: directorySeparator,
+	}
 
 	var state stateFunc
 	for state = lexAnything; state != nil; {
@@ -160,7 +162,11 @@ func lexWildcardStart(l *lexerState) stateFunc {
 	case '*':
 		nextRune := l.next()
 		if nextRune == '*' {
-			l.addToken(&tokenMultiCharMultiDirectory{})
+			afterGlobStar := l.next()
+			l.backup()
+			l.addToken(&tokenMultiCharMultiDirectory{
+				directoriesOnly: afterGlobStar == l.directorySeparator,
+			})
 		} else {
 			l.backup()
 			l.addToken(&tokenMultiCharSingleDirectory{})

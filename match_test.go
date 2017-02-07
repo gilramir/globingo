@@ -84,7 +84,7 @@ func (s *MySuite) TestMatchInvertedRange(c *C) {
 	c.Assert(match, IsNil)
 }
 
-func (s *MySuite) TestMatchMultiChar(c *C) {
+func (s *MySuite) TestMatchMultiCharSingleDirectoryAtEnd(c *C) {
 	glob, err := New("foo*", UnixStyle, false)
 	c.Assert(err, IsNil)
 
@@ -113,6 +113,99 @@ func (s *MySuite) TestMatchMultiChar(c *C) {
 
 	match = glob.Match("barz")
 	c.Assert(match, IsNil)
+}
+
+func (s *MySuite) TestMatchMultiCharSingleDirectoryInMiddle(c *C) {
+	glob, err := New("foo*.c", UnixStyle, false)
+	c.Assert(err, IsNil)
+
+	// '*' matches zero characters, too
+	match := glob.Match("foo.c")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 3)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "")
+	c.Check(match.matchedStrings[2], Equals, ".c")
+
+	// * only goes up to the directory separator
+	match = glob.Match("foo/.c")
+	c.Assert(match, IsNil)
+
+	match = glob.Match("fooz.c")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 3)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "z")
+	c.Check(match.matchedStrings[2], Equals, ".c")
+
+	match = glob.Match("fooze.c")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 3)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "ze")
+	c.Check(match.matchedStrings[2], Equals, ".c")
+}
+
+func (s *MySuite) TestMatchMultiCharMultiDirectoryAtEnd(c *C) {
+	glob, err := New("foo**", UnixStyle, true)
+	c.Assert(err, IsNil)
+
+	// '*' matches zero characters, too
+	match := glob.Match("foo")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 2)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "")
+
+	// ** passes the directory separator
+	match = glob.Match("foo/bar")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 2)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "/bar")
+
+	// ** passes two directory separators
+	match = glob.Match("foo/bar/baz")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 2)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "/bar/baz")
+
+	match = glob.Match("fooz")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 2)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "z")
+
+	match = glob.Match("fooxyz")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 2)
+	c.Check(match.matchedStrings[0], Equals, "foo")
+	c.Check(match.matchedStrings[1], Equals, "xyz")
+
+	match = glob.Match("barz")
+	c.Assert(match, IsNil)
+}
+
+func (s *MySuite) TestMatchMultiCharMultiDirectoryAtDirectory(c *C) {
+	// See example at https://github.com/isaacs/node-glob
+	glob, err := New("foo/**/*.js", UnixStyle, true)
+	c.Assert(err, IsNil)
+
+	match := glob.Match("foo.js")
+	c.Assert(match, IsNil)
+
+	match = glob.Match("foo/file.js")
+	c.Assert(match, IsNil)
+
+	match = glob.Match("foo/a/file.js")
+	c.Assert(match, NotNil)
+	c.Check(len(match.matchedStrings), Equals, 5)
+	c.Check(match.matchedStrings[0], Equals, "foo/")
+	c.Check(match.matchedStrings[1], Equals, "a")
+	c.Check(match.matchedStrings[2], Equals, "/")
+	c.Check(match.matchedStrings[3], Equals, "file")
+	c.Check(match.matchedStrings[4], Equals, ".js")
 }
 
 func (s *MySuite) TestReplaceNoWildcard(c *C) {

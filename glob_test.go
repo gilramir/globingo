@@ -16,8 +16,7 @@ func (s *MySuite) TestNew(c *C) {
 	c.Assert(err, NotNil)
 
 	_, err = New("foo**", UnixStyle, true)
-	//c.Assert(err, IsNil)
-	c.Assert(err, NotNil) // temporary - ** is not yet implemented
+	c.Assert(err, IsNil)
 }
 
 func (s *MySuite) TestMatchGetWildcardText(c *C) {
@@ -66,5 +65,6 @@ func (s *MySuite) TestStartsWith(c *C) {
 	c.Assert(err, IsNil)
 	c.Check(text, Equals, "ze")
 
-	c.Check(haystack[match.LastPosition():], Equals, "/bat/x/bar.c")
+	c.Check(match.Length(), Equals, len("fooze"))
+	c.Check(haystack[match.Length():], Equals, "/bat/x/bar.c")
 }

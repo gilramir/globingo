@@ -5,7 +5,7 @@ This handles globbing for strings that look like file paths.
 
 Patterns:
 
-    * - match any sequence of non-separator characters
+    * - match any sequence of non-separator characters, including the empty-string
 
     ? - match any single non-separator character
 
@@ -15,32 +15,56 @@ Patterns:
 
     To match any of the special characters, enclose in brackets, like: [?] or [[] or []]
 
-Not yet implemented:
-    ** - if recursive is set, match any files and zero or more directories and subdirectories.
-        If ** is followed by a separator character, only directories and subdirectories match.
-        If recursive is not set, this is an illegal character combination.
+    ** - if recursive is true when New is called, match any files and zero or more directories
+        and subdirectories.  If ** is followed by a separator character, only directories and
+        subdirectories match.  If recursive is not set, this is an illegal character combination.
 
 API docs at: [godoc.org](https://godoc.org/github.com/gilramir/globingo "GoDoc")
 
 To use:
 
-1. Create a new Glob object with the glob string:
+Create a new Glob object with the glob string:
 ```
 import "github.com/gilramir/globingo"
 
 glob, err := globingo.New("*.tar.gz", NativeStyle, false)
 ```
-2. Use that Glob object to match a pattern, either with Match(), which matches the entire pattern,
+
+Use that Glob object to match a pattern, either with Match(), which matches the entire pattern,
 or StartsWith(), which checks if the pattern starts with the glob.
 ```
 match := glob.Match("foo.tar.gz")
 ```
-3. The returned match object is nil if the match was not successful. A non-nil value means
+
+The returned match object is nil if the match was not successful. A non-nil value means
 the match was successful.
 
-4. You can also use the Match object to replace the matched wildcards into a new string:
+
+Alternatively, you the Glob object provides a StartsWith() method which returns a
+Match object which only has to match the beginning of the string.
 ```
-match := glob.Match("dirname/*")
-newString, err := match.Replace("Filename: \\1")
+glob, err := globingo.New("foo/*", UnixStyle, false)
+
+shouldBeNil := glob.StartsWith("foo")
+positiveMatch := glob.StartsWith("foo/bar/baz")
 ```
+
+In the above example, in the case of the positive match, the glob will match "foo/bar", since "\*"
+only matches up to the directory separator character. To find out how much of the
+string was matched, the Match object provides a Length() method.
+
+With the Match object, you can also replace the matched wildcards into a new string.
+
+```
+glob, err := globingo.New("foo/*", NativeStyle, false)
+match := glob.Match("foo/bar")
+
+// Get the "*" text with GetWildcardText
+subDir, err := match.GetWildcardText(1)
+
+// Or create a new string by replacing wildcards via "\\n", where n is the Nth wildcard,
+// starting a 1
+subDir, err := match.Replace("bar/\\1")
+```
+
 
