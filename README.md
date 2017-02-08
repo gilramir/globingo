@@ -60,11 +60,11 @@ glob, err := globingo.New("foo/*", NativeStyle, false)
 match := glob.Match("foo/bar")
 
 // Get the "*" text with GetWildcardText
-subDir, err := match.GetWildcardText(1)
+text, err := match.GetWildcardText(1)
 
 // Or create a new string by replacing wildcards via "\\n", where n is the Nth wildcard,
 // starting a 1
-subDir, err := match.Replace("bar/\\1")
+text, err := match.Replace("foo2/\\1")
 ```
 
 
